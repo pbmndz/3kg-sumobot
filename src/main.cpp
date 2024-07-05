@@ -22,9 +22,9 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 bool buttonClicked = false; // Initialize the flag
 bool startSumo = false; 
 
-void forward(){              
-  digitalWrite (RMOTOR1, LOW);
-  digitalWrite (RMOTOR2, HIGH);
+void forward(){         
+  digitalWrite (RMOTOR1, HIGH);
+  digitalWrite (RMOTOR2, LOW);
   digitalWrite (LMOTOR1, HIGH);
   digitalWrite (LMOTOR2, LOW);
   Serial.println ("forward");
@@ -32,8 +32,8 @@ void forward(){
 void backwards(){              
   digitalWrite (RMOTOR1, LOW);
   digitalWrite (RMOTOR2, HIGH);
-  digitalWrite (LMOTOR1, HIGH);
-  digitalWrite (LMOTOR2, LOW);
+  digitalWrite (LMOTOR1, LOW);
+  digitalWrite (LMOTOR2, HIGH);
   Serial.println ("forward");
 }
 void right(){              
@@ -46,8 +46,8 @@ void right(){
 void left(){              
   digitalWrite (RMOTOR1, HIGH);
   digitalWrite (RMOTOR2, LOW);
-  digitalWrite (LMOTOR1, HIGH);
-  digitalWrite (LMOTOR2, LOW);
+  digitalWrite (LMOTOR1, LOW);
+  digitalWrite (LMOTOR2, HIGH);
   Serial.println ("left");
 }
 void motor_stop(){
@@ -93,6 +93,8 @@ void loop() {
   int irStart = digitalRead(2);     //irStart
   int buttonStart = digitalRead(3);     //irStart
 
+  int lineLeftBack = digitalRead(7);     //irStart
+  int lineRightBack = digitalRead(12);     //irStart
   int lineLeft = digitalRead(11);     //irStart
   int lineRight = digitalRead(13);     //irStart
   //sensors
@@ -149,20 +151,37 @@ if (startSumo or irStart == 1) {
   display.print(F("B: "));
   display.print(irSensorBack);
   
-  display.setCursor(0, 40);
-  display.print(F("line sensors:"));
   display.setCursor(0, 50);
   display.print(F("LFR: "));
   display.print(lineRight);
   display.setCursor(50, 50);
   display.print(F("LFL: "));
   display.print(lineLeft);
+  display.setCursor(0, 40);
+  display.print(F("blr:"));
+  display.print(lineRightBack);
+  display.setCursor(50, 40);
+  display.print(F("bll:"));
+  display.print(lineLeftBack);
+  display.setCursor(0, 50);
 
 
-  if (Strategies >= 360 && Strategies <= 366) {
+
+  if (Strategies >= 360 && Strategies <= 366 && startSumo or irStart) {
       display.setCursor(0, 0);
       display.print(F("Strategy 1"));
-      right();
+      forward();
+      if (lineRight or lineLeft)
+      {
+        backwards();
+        delay(250);
+        right();
+        delay(500);
+      }
+      else{
+        forward();
+      }
+      
   } else if (Strategies >= 380 && Strategies <= 388) {
       display.setCursor(0, 0);
       display.print(F("Strategy 2"));
