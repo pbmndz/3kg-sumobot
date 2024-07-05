@@ -22,13 +22,27 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 bool buttonClicked = false; // Initialize the flag
 bool startSumo = false; 
 
+void forward(){              
+  digitalWrite (RMOTOR1, LOW);
+  digitalWrite (RMOTOR2, HIGH);
+  digitalWrite (LMOTOR1, HIGH);
+  digitalWrite (LMOTOR2, LOW);
+  Serial.println ("forward");
+}
+void backwards(){              
+  digitalWrite (RMOTOR1, LOW);
+  digitalWrite (RMOTOR2, HIGH);
+  digitalWrite (LMOTOR1, HIGH);
+  digitalWrite (LMOTOR2, LOW);
+  Serial.println ("forward");
+}
 void right(){              
   digitalWrite (RMOTOR1, LOW);
   digitalWrite (RMOTOR2, HIGH);
   digitalWrite (LMOTOR1, HIGH);
   digitalWrite (LMOTOR2, LOW);
   Serial.println ("right");
-}
+} 
 void left(){              
   digitalWrite (RMOTOR1, HIGH);
   digitalWrite (RMOTOR2, LOW);
@@ -36,7 +50,6 @@ void left(){
   digitalWrite (LMOTOR2, LOW);
   Serial.println ("left");
 }
-
 void motor_stop(){
   digitalWrite (RMOTOR1, LOW);
   digitalWrite (RMOTOR2, LOW);
@@ -63,6 +76,8 @@ void setup() {
   pinMode(2, INPUT);
   pinMode(3, INPUT);
   pinMode(4, INPUT);
+  pinMode(7, INPUT);
+  pinMode(8, INPUT);
   pinMode(A0, INPUT);
   pinMode(A1, INPUT);
   pinMode(A2, INPUT);
@@ -77,29 +92,19 @@ void loop() {
   int Strategies = analogRead(A0);  //STRAT
   int irStart = digitalRead(2);     //irStart
   int buttonStart = digitalRead(3);     //irStart
+
+  int lineLeft = digitalRead(11);     //irStart
+  int lineRight = digitalRead(13);     //irStart
   //sensors
   int irFront = digitalRead(4); //front
-  int irCornerLeft = analogRead(A1);
-  int irCornerRight = analogRead(A2);
+  int irSensorLeft = analogRead(A1); 
+  int irSensorRight = analogRead(A2); 
   int irSensorBack = analogRead(A3);
-  int irSensorRight = analogRead(A6);
-  int irSensorLeft = analogRead(A7);
+  int irCornerRight = analogRead(A6);
+  int irCornerLeft = analogRead(A7);
   display.clearDisplay();
   
-  
-//  if (buttonStart == HIGH) {
-//    buttonClicked = true; // Set the flag to true when the button is clicked
-//  } else if(buttonStart == HIGH && buttonClicked == true){
-//    buttonClicked = false;
-//  }
-//
-//  if (buttonStart == HIGH) {
-//    if (!buttonClicked) {
-//      buttonClicked = true; 
-//    } else {
-//      buttonClicked = false; 
-//    }
-//  }
+
 
 if (buttonStart == HIGH) {
   if (!buttonClicked) {
@@ -121,7 +126,8 @@ if (startSumo or irStart == 1) {
   display.println("stop");
 }
 
-
+  pinMode(3, INPUT);
+  pinMode(4, INPUT);
   
   display.setCursor(0, 20);
   display.print(F("F: "));
@@ -147,17 +153,16 @@ if (startSumo or irStart == 1) {
   display.print(F("line sensors:"));
   display.setCursor(0, 50);
   display.print(F("LFR: "));
-  display.print("sd");
+  display.print(lineRight);
   display.setCursor(50, 50);
   display.print(F("LFL: "));
-  display.print("ds");
+  display.print(lineLeft);
 
-
-  
 
   if (Strategies >= 360 && Strategies <= 366) {
       display.setCursor(0, 0);
       display.print(F("Strategy 1"));
+      right();
   } else if (Strategies >= 380 && Strategies <= 388) {
       display.setCursor(0, 0);
       display.print(F("Strategy 2"));
@@ -170,7 +175,7 @@ if (startSumo or irStart == 1) {
   } else {
       display.setCursor(0, 0);
       display.print(F("pick a strategy"));
+      motor_stop();
   }
   display.display();
-   Serial.println(startSumo);
 } 
