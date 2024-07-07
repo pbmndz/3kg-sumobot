@@ -4,6 +4,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
+//motor
 #define RMOTOR1 9
 #define RMOTOR2 10
 
@@ -13,7 +14,6 @@
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 
-// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
 #define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
 #define SCREEN_ADDRESS 0x3C // Use 0x3D if 0x3C doesn't work
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
@@ -21,20 +21,29 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 //flag
 bool buttonClicked = false; // Initialize the flag
 bool startSumo = false; 
+bool zigzagR = false;
+bool start = false;
 
-void forward(){         
+void attack(){         
   digitalWrite (RMOTOR1, HIGH);
   digitalWrite (RMOTOR2, LOW);
   digitalWrite (LMOTOR1, HIGH);
   digitalWrite (LMOTOR2, LOW);
-  Serial.println ("forward");
+  Serial.println ("ATTACK");
+}
+void forward(){         
+  analogWrite (RMOTOR1, 125);
+  digitalWrite (RMOTOR2, LOW);
+  analogWrite (LMOTOR1, 125);
+  digitalWrite (LMOTOR2, LOW);
+  Serial.println ("Forward");
 }
 void backwards(){              
   digitalWrite (RMOTOR1, LOW);
   digitalWrite (RMOTOR2, HIGH);
   digitalWrite (LMOTOR1, LOW);
   digitalWrite (LMOTOR2, HIGH);
-  Serial.println ("forward");
+  Serial.println ("Backward");
 }
 void right(){              
   digitalWrite (RMOTOR1, LOW);
@@ -50,7 +59,7 @@ void left(){
   digitalWrite (LMOTOR2, HIGH);
   Serial.println ("left");
 }
-void motor_stop(){
+void stop(){
   digitalWrite (RMOTOR1, LOW);
   digitalWrite (RMOTOR2, LOW);
   digitalWrite (LMOTOR1, LOW);
@@ -63,19 +72,19 @@ void setup() {
 
   Serial.begin(9600);
 
+// Display
   if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
     Serial.println(F("SSD1306 allocation failed"));
     for(;;); 
   }
+  display.setRotation(2);
   display.clearDisplay();
   display.setTextSize(1);      
-  display.setTextColor(SSD1306_WHITE); 
-  display.setCursor(0, 0);     
-  display.display();
+  display.setTextColor(SSD1306_WHITE);   
   
+// SENSORS
   pinMode(2, INPUT);
   pinMode(3, INPUT);
-  pinMode(4, INPUT);
   pinMode(7, INPUT);
   pinMode(8, INPUT);
   pinMode(A0, INPUT);
@@ -84,117 +93,129 @@ void setup() {
   pinMode(A3, INPUT);
   pinMode(A6, INPUT);
   pinMode(A7, INPUT);
+
+// MOTOR
+  pinMode(5, OUTPUT);
+  pinMode(6, OUTPUT);
+  pinMode(9, OUTPUT);
+  pinMode(10, OUTPUT);
+
 }
 
 
 void loop() {
- 
-  int Strategies = analogRead(A0);  //STRAT
-  int irStart = digitalRead(2);     //irStart
-  int buttonStart = digitalRead(3);     //irStart
+  display.clearDisplay();
 
-  int lineLeftBack = digitalRead(7);     //irStart
-  int lineRightBack = digitalRead(12);     //irStart
-  int lineLeft = digitalRead(11);     //irStart
-  int lineRight = digitalRead(13);     //irStart
-  //sensors
-  int irFront = digitalRead(4); //front
-  int irSensorLeft = analogRead(A1); 
-  int irSensorRight = analogRead(A2); 
-  int irSensorBack = analogRead(A3);
+  int Strategies = analogRead(A0); 
+  int irStart = digitalRead(2);     
+  int buttonStart = digitalRead(3); 
+  int lineLeftBack = digitalRead(7);  
+  int lineRightBack = digitalRead(12); 
+  int lineLeft = digitalRead(11);    
+  int lineRight = digitalRead(13);    
+  // Sensors
+  int irFront = digitalRead(4);       
+  int irSensorLeft = analogRead(A3);
+  int irSensorRight = analogRead(A1);
+  int irSensorBack = analogRead(A2);
   int irCornerRight = analogRead(A6);
   int irCornerLeft = analogRead(A7);
-  display.clearDisplay();
-  
-
 
 if (buttonStart == HIGH) {
   if (!buttonClicked) {
-    buttonClicked = true; // Set the flag to true when the button is clicked
-    startSumo = !startSumo; // Toggle the startSumo variable
+    buttonClicked = true; 
+    startSumo = !startSumo; 
   } else {
-    buttonClicked = false; // Reset the flag when the button is clicked again
+    buttonClicked = false; 
   }
-  delay(100); // Add a small delay to avoid rapid toggling
+  delay(100);
 }
 
 if (startSumo or irStart == 1) {
   display.setCursor(0, 10);
   display.print(F("Microstart: "));
   display.println("start!!");
+  start = true;
 } else {
   display.setCursor(0, 10);
   display.print(F("Microstart: "));
   display.println("stop");
+  start = false;
 }
-
-  pinMode(3, INPUT);
-  pinMode(4, INPUT);
-  
+  display.setCursor(100, 0);
+  display.print(Strategies);
+  // front sensors
   display.setCursor(0, 20);
-  display.print(F("F: "));
-  display.print(irFront);
+  display.print(F("F: ")); display.print(irFront);
   display.setCursor(40, 20);
-  display.print(F("CL: "));
-  display.print(irCornerLeft);
+  display.print(F("CL: ")); display.print(irCornerLeft);
   display.setCursor(80, 20);
-  display.print(F("CR: "));
-  display.print(irCornerRight);
-  
+  display.print(F("CR: ")); display.print(irCornerRight);
+  // side and back sensors
   display.setCursor(0, 30);
-  display.print(F("L: "));
-  display.println(irSensorLeft);
+  display.print(F("L: ")); display.println(irSensorLeft);
   display.setCursor(40, 30);
-  display.print(F("R: "));
-  display.print(irSensorRight);
+  display.print(F("R: ")); display.print(irSensorRight);
   display.setCursor(80, 30);
-  display.print(F("B: "));
-  display.print(irSensorBack);
-  
+  display.print(F("B: ")); display.print(irSensorBack);
+  // Line sensor
   display.setCursor(0, 50);
-  display.print(F("LFR: "));
-  display.print(lineRight);
+  display.print(F("LFR: ")); display.print(lineRight);
   display.setCursor(50, 50);
-  display.print(F("LFL: "));
-  display.print(lineLeft);
+  display.print(F("LFL: ")); display.print(lineLeft);
   display.setCursor(0, 40);
-  display.print(F("blr:"));
-  display.print(lineRightBack);
+  display.print(F("blr:")); display.print(lineRightBack);
   display.setCursor(50, 40);
-  display.print(F("bll:"));
-  display.print(lineLeftBack);
-  display.setCursor(0, 50);
+  display.print(F("bll:")); display.print(lineLeftBack);
 
-
-
-  if (Strategies >= 360 && Strategies <= 366 && startSumo or irStart) {
+  if (Strategies >= 360 && Strategies <= 379) {
       display.setCursor(0, 0);
       display.print(F("Strategy 1"));
-      forward();
-      if (lineRight or lineLeft)
-      {
-        backwards();
-        delay(250);
-        right();
-        delay(500);
+      if(start){
+        if (!zigzagR){
+          right();
+          delay(125);
+          attack();
+          delay(200);
+          left();
+          delay(125);
+          attack();
+          delay(200);
+          zigzagR = true;
+        } else if (lineRight or lineLeft){
+          backwards();
+          delay(250);
+          right();
+          delay(250);
+        }else if (irFront){
+          attack();
+        }else if (irCornerLeft > 75 or irSensorLeft > 75){
+          left();
+        }else if (irCornerRight > 75 or irSensorRight > 75){
+          right();
+        }else if(irSensorBack > 75){
+          right();
+          delay(500);
+        }else{
+          forward();
+        }  
+      }else if(!irStart){
+        stop();
+        start = false;
       }
-      else{
-        forward();
-      }
-      
-  } else if (Strategies >= 380 && Strategies <= 388) {
+  } else if (Strategies >= 390 && Strategies <= 399) {
       display.setCursor(0, 0);
       display.print(F("Strategy 2"));
-  } else if (Strategies >= 390 && Strategies <= 402) {
+  } else if (Strategies >= 405 && Strategies <= 418) {
       display.setCursor(0, 0);
       display.print(F("Strategy 3"));
-  } else if (Strategies >= 407 && Strategies <= 420) {
+  } else if (Strategies >= 420 && Strategies <= 430) {
       display.setCursor(0, 0);
       display.print(F("Strategy 4"));
   } else {
       display.setCursor(0, 0);
       display.print(F("pick a strategy"));
-      motor_stop();
+      stop();
   }
   display.display();
 } 
