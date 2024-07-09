@@ -24,48 +24,69 @@ bool startSumo = false;
 bool zigzagR = false;
 bool start = false;
 
+
 void attack(){         
-  digitalWrite (RMOTOR1, HIGH);
-  digitalWrite (RMOTOR2, LOW);
-  digitalWrite (LMOTOR1, HIGH);
-  digitalWrite (LMOTOR2, LOW);
+  analogWrite (RMOTOR1, 200);
+  analogWrite (RMOTOR2, 0);
+  analogWrite (LMOTOR1, 200);
+  analogWrite (LMOTOR2, 0);
   Serial.println ("ATTACK");
 }
+
 void forward(){         
-  analogWrite (RMOTOR1, 125);
-  digitalWrite (RMOTOR2, LOW);
-  analogWrite (LMOTOR1, 125);
-  digitalWrite (LMOTOR2, LOW);
+  analogWrite (RMOTOR1, 83);
+  analogWrite (RMOTOR2, 0);
+  analogWrite (LMOTOR1, 100);
+  analogWrite (LMOTOR2, 0);
   Serial.println ("Forward");
 }
+
 void backwards(){              
-  digitalWrite (RMOTOR1, LOW);
-  digitalWrite (RMOTOR2, HIGH);
-  digitalWrite (LMOTOR1, LOW);
-  digitalWrite (LMOTOR2, HIGH);
+  analogWrite (RMOTOR1, 0);
+  analogWrite (RMOTOR2, 180);
+  analogWrite (LMOTOR1, 0);
+  analogWrite (LMOTOR2, 180);
   Serial.println ("Backward");
 }
+
 void right(){              
-  digitalWrite (RMOTOR1, LOW);
-  digitalWrite (RMOTOR2, HIGH);
-  digitalWrite (LMOTOR1, HIGH);
-  digitalWrite (LMOTOR2, LOW);
+  analogWrite (RMOTOR1, 0);
+  analogWrite (RMOTOR2, 200);
+  analogWrite (LMOTOR1, 200);
+  analogWrite (LMOTOR2, 0);
   Serial.println ("right");
 } 
+
 void left(){              
-  digitalWrite (RMOTOR1, HIGH);
-  digitalWrite (RMOTOR2, LOW);
-  digitalWrite (LMOTOR1, LOW);
-  digitalWrite (LMOTOR2, HIGH);
+  analogWrite (RMOTOR1, 200);
+  analogWrite (RMOTOR2, 0);
+  analogWrite (LMOTOR1, 0);
+  analogWrite (LMOTOR2, 200);
+  Serial.println ("left");
+}
+void cornerRight(){              
+  analogWrite (RMOTOR1, 0);
+  analogWrite (RMOTOR2, 120);
+  analogWrite (LMOTOR1, 200);
+  analogWrite (LMOTOR2, 0);
+  Serial.println ("right");
+} 
+
+void cornerLeft(){              
+  analogWrite (RMOTOR1, 200);
+  analogWrite (RMOTOR2, 0);
+  analogWrite (LMOTOR1, 0);
+  analogWrite (LMOTOR2, 120);
   Serial.println ("left");
 }
 void stop(){
-  digitalWrite (RMOTOR1, LOW);
-  digitalWrite (RMOTOR2, LOW);
-  digitalWrite (LMOTOR1, LOW);
-  digitalWrite (LMOTOR2, LOW);
+  analogWrite (RMOTOR1, 0);
+  analogWrite (RMOTOR2, 0);
+  analogWrite (LMOTOR1, 0);
+  analogWrite (LMOTOR2, 0);
   Serial.println ("STOP");
 }
+
 
 
 void setup() {
@@ -73,13 +94,13 @@ void setup() {
   Serial.begin(9600);
 
 // Display
-  if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
     Serial.println(F("SSD1306 allocation failed"));
     for(;;); 
-  }
-  display.setRotation(2);
+}
   display.clearDisplay();
-  display.setTextSize(1);      
+  display.setTextSize(1);     
+  display.setRotation(2);
   display.setTextColor(SSD1306_WHITE);   
   
 // SENSORS
@@ -121,6 +142,7 @@ void loop() {
   int irCornerRight = analogRead(A6);
   int irCornerLeft = analogRead(A7);
 
+  
 if (buttonStart == HIGH) {
   if (!buttonClicked) {
     buttonClicked = true; 
@@ -146,39 +168,67 @@ if (startSumo or irStart == 1) {
   display.print(Strategies);
   // front sensors
   display.setCursor(0, 20);
-  display.print(F("F: ")); display.print(irFront);
+  display.print(F("F: ")); 
+  display.print(!irFront ? String(irFront) : "go");
+
   display.setCursor(40, 20);
-  display.print(F("CL: ")); display.print(irCornerLeft);
+  display.print(F("CL: "));
+  display.print(irCornerLeft < 100 ? String(irCornerLeft) : "!!!");
+
   display.setCursor(80, 20);
-  display.print(F("CR: ")); display.print(irCornerRight);
+  display.print(F("CR: "));
+  display.print(irCornerRight < 100 ? String(irCornerRight) : "!!!");
+
+
+
   // side and back sensors
   display.setCursor(0, 30);
-  display.print(F("L: ")); display.println(irSensorLeft);
+  display.print(F("L: "));
+  display.print(irSensorLeft < 70 ? String(irSensorLeft) : "!!!");
+
   display.setCursor(40, 30);
-  display.print(F("R: ")); display.print(irSensorRight);
+  display.print(F("R: "));
+  display.print(irSensorRight < 70 ? String(irSensorRight) : "!!!");
+
   display.setCursor(80, 30);
-  display.print(F("B: ")); display.print(irSensorBack);
+  display.print(F("B: "));
+  display.print(irSensorBack < 70 ? String(irSensorBack) : "!!!");
+
+
+  
   // Line sensor
   display.setCursor(0, 50);
   display.print(F("LFR: ")); display.print(lineRight);
   display.setCursor(50, 50);
   display.print(F("LFL: ")); display.print(lineLeft);
   display.setCursor(0, 40);
-  display.print(F("blr:")); display.print(lineRightBack);
-  display.setCursor(50, 40);
-  display.print(F("bll:")); display.print(lineLeftBack);
+  display.print(F("blr:")); 
+  if (lineRightBack){
+    display.print(lineLeftBack);
+  }else{
+    display.print("ready");
+  }
+  display.setCursor(70, 40);
+  display.print(F("bll:")); 
+  if (lineLeftBack){
+    display.print(lineLeftBack);
+  }else{
+    display.print("ready");
+  }
+   
 
-  if (Strategies >= 360 && Strategies <= 379) {
+  if (Strategies >= 375 && Strategies <= 388) {
       display.setCursor(0, 0);
-      display.print(F("Strategy 1"));
+      display.print(F("ZIGZAG RIGHT"));
       if(start){
+        delay(5000);
         if (!zigzagR){
           right();
-          delay(125);
+          delay(80);
           attack();
-          delay(200);
+          delay(500);
           left();
-          delay(125);
+          delay(80);
           attack();
           delay(200);
           zigzagR = true;
@@ -187,31 +237,92 @@ if (startSumo or irStart == 1) {
           delay(250);
           right();
           delay(250);
+        }else if (!lineLeftBack and !lineRightBack){
+          attack();
         }else if (irFront){
           attack();
-        }else if (irCornerLeft > 75 or irSensorLeft > 75){
+        }else if (irCornerLeft > 100 ){
+          cornerLeft();
+        }else if (irCornerRight > 100){
+          cornerRight();
+        }else if (irSensorLeft > 100){
           left();
-        }else if (irCornerRight > 75 or irSensorRight > 75){
+        }else if (irSensorRight > 100){
           right();
-        }else if(irSensorBack > 75){
+        }else if(irSensorBack > 100){
           right();
+          delay(250);
+        }
+        else{
+          forward();
+        }   
+      }else if(!irStart){
+        stop();
+        start = false;
+      }
+  } else if (Strategies >= 390 && Strategies <= 485) {
+      display.setCursor(0, 0);
+      display.print(F("ZIGZAG LEFT"));
+      if(start){
+        delay(5000);
+        if (!zigzagR){
+          left();
+          delay(80);
+          attack();
           delay(500);
-        }else{
+          right();
+          delay(80);
+          attack();
+          delay(200);
+          zigzagR = true;
+        } else if (lineRight or lineLeft){
+          backwards();
+          delay(250);
+          right();
+          delay(250);
+        }else if (!lineLeftBack and !lineRightBack){
+          attack();
+        }else if (irFront){
+          attack();
+        }else if (irCornerLeft > 100 ){
+          left();
+        }else if (irCornerRight > 100){
+          right();
+        }else if (irSensorLeft > 100){
+          left();
+        }else if (irSensorRight > 100){
+          right();
+        }else if(irSensorBack > 100){
+          right();
+          delay(250);
+        }
+        else{
           forward();
         }  
       }else if(!irStart){
         stop();
         start = false;
       }
-  } else if (Strategies >= 390 && Strategies <= 399) {
-      display.setCursor(0, 0);
-      display.print(F("Strategy 2"));
-  } else if (Strategies >= 405 && Strategies <= 418) {
+  } else if (Strategies >= 410 && Strategies <= 423) {
       display.setCursor(0, 0);
       display.print(F("Strategy 3"));
-  } else if (Strategies >= 420 && Strategies <= 430) {
+    if(start){
+      delay(5000);
+      if (irFront) {
+          attack();
+        }
+      else if (irCornerLeft > 100) {
+          left();
+        }
+      else{
+        forward();
+      }
+    }
+  } else if (Strategies >= 427 && Strategies <= 440) {
       display.setCursor(0, 0);
       display.print(F("Strategy 4"));
+
+
   } else {
       display.setCursor(0, 0);
       display.print(F("pick a strategy"));
